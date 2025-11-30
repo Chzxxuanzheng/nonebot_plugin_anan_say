@@ -3,6 +3,7 @@ from functools import cache
 from typing import Optional
 from .typing import Cmd, LineInfo, TagMap
 from pathlib import Path
+import re
 
 BOOK_LEFT = 320
 BOOK_TOP = 875
@@ -23,9 +24,37 @@ def hex_to_rgba(hex_code: str) -> tuple[int, int, int, int]:
 
 @cache
 def get_char_size(char: str, font_size: int, fontpath: str) -> tuple[int, int]:
+	'''
+	获取单个字符的尺寸
+	'''
 	font = ImageFont.truetype(fontpath, font_size)
 	tmp = font.getbbox(char)
 	return int(tmp[2] - tmp[0]), int(tmp[3] - tmp[1])
+
+def unfold_simplify_tag(data: str, tag: str) -> str:
+	'''
+	展开简化标签形式，将 !tag[内容] 转换为 [tag]内容
+	'''
+	data = data.replace(rf'\!{tag}', '#PROTECT#')
+
+	pattern = rf'!{tag}\[(.*?)\]'
+	
+	data = re.sub(pattern, lambda match: f'[{tag}]{match.group(1)}[/{tag}]', data)
+	return data.replace('#PROTECT#', rf'\!{tag}')
+
+def preprocess(data: str) -> str:
+	'''
+	预处理输入字符串，解析缩写标签
+	'''
+	# 缩写标签处理
+	data = unfold_simplify_tag(data, 'b')
+	data = unfold_simplify_tag(data, 'u')
+	data = unfold_simplify_tag(data, 's')
+	data = unfold_simplify_tag(data, 'm')
+	# 魔法标签处理
+	data = data.replace('[m]', '[c #998DFB]【')
+	data = data.replace('[/m]', '】[/c]')
+	return data
 
 def parse_tag(data: str) -> tuple[Cmd, int]:
 	'''
@@ -92,6 +121,9 @@ def parse_commands(data: str) -> list[Cmd]:
 	'''
 	解析输入字符串为命令列表
 	'''
+	data = preprocess(data)
+
+	# 解析命令
 	out = []
 	now_id = 0
 	while True:
