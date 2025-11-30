@@ -35,12 +35,13 @@ def unfold_simplify_tag(data: str, tag: str) -> str:
 	'''
 	展开简化标签形式，将 !tag[内容] 转换为 [tag]内容
 	'''
+	data = data.replace(r'\\', '#LINE#')
 	data = data.replace(rf'\!{tag}', '#PROTECT#')
 
 	pattern = rf'!{tag}\[(.*?)\]'
 	
 	data = re.sub(pattern, lambda match: f'[{tag}]{match.group(1)}[/{tag}]', data)
-	return data.replace('#PROTECT#', rf'\!{tag}')
+	return data.replace('#PROTECT#', rf'!{tag}').replace('#LINE#', r'\\')
 
 def preprocess(data: str) -> str:
 	'''
@@ -54,6 +55,7 @@ def preprocess(data: str) -> str:
 	# 魔法标签处理
 	data = data.replace('[m]', '[c #998DFB]【')
 	data = data.replace('[/m]', '】[/c]')
+	data = data.replace(r'\\', '\\')
 	return data
 
 def parse_tag(data: str) -> tuple[Cmd, int]:
