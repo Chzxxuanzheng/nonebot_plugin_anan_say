@@ -195,7 +195,7 @@ def calc_range(data: list[Cmd], font_size: int, range: tuple[int, int], fontpath
 			current_line_height = height
 		current_line_data.append(cmd)
 	# 保存最后一行
-	new_line()
+	if not new_line(): return None
 
 	return line_infos
 
@@ -234,7 +234,7 @@ def render_rich_text_to_image(
 	'''
 	渲染富文本函数
 	'''
-	img = Image.new("RGBA", range, (255, 255, 255, 0))
+	img = Image.new("RGBA", range, (0, 0, 0, 0))
 	all_height = sum([line['height'] for line in line_infos])
 	current_y = (range[1] - all_height) // 2 - line_infos[0]['height'] // 2
 
